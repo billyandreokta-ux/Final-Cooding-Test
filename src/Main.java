@@ -131,10 +131,10 @@ public class Main {
         }
 
         if (books.get(2).borrowBook()) {
-            Transaction t3 = new Transaction(members.get(2), books.get(2), "10-11-2025", 14);
+            Transaction t3 = new Transaction(members.get(2), books.get(2), "24-11-2025", 14);
             transactions.add(t3);
             System.out.println("✓ Peminjaman berhasil: " + members.get(2).getName() + " meminjam \"" + books.get(2).getTitle() + "\"");
-            System.out.println("   Tanggal Pinjam: 10-11-2025 | Jatuh Tempo: " + t3.getDueDate());
+            System.out.println("   Tanggal Pinjam: 24-11-2025 | Jatuh Tempo: " + t3.getDueDate());
         }
 
         if (books.get(3).borrowBook()) {
@@ -152,7 +152,13 @@ public class Main {
         t3.processReturn("04-12-2025");
         System.out.println("✓ " + t3.getMember().getName() + " mengembalikan \"" + t3.getBook().getTitle() + "\"");
         System.out.println("   Tanggal Kembali: 04-12-2025 | Terlambat: " + t3.getDaysLate() + " hari");
-        System.out.println("   Denda: Rp " + (long)t3.getLateFee() + " (setelah diskon " + (int)(t3.getMember().getMembershipDiscount() * 100) + "%)");
+        if (t3.getLateFee() > 0) {
+            double originalFee = t3.getDaysLate() * 2000.0;
+            double discount = t3.getMember().getMembershipDiscount();
+            System.out.println("   Denda: Rp " + (long)t3.getLateFee() + " (Rp " + (long)originalFee + " - diskon " + (int)(discount * 100) + "%)");
+        } else {
+            System.out.println("   Denda: Rp 0");
+        }
 
         Transaction t4 = transactions.get(3);
         t4.processReturn("03-12-2025");
@@ -235,7 +241,7 @@ public class Main {
                     System.out.println("Denda         : Rp 0");
                 }
             } else {
-                int daysRemaining = daysBetween(t.getBorrowDate(), t.getDueDate());
+                long daysRemaining = dateDifference(t.getBorrowDate(), t.getDueDate());
                 System.out.println("Status        : Masih Dipinjam (" + daysRemaining + " hari lagi)");
             }
             System.out.println("--------------------------------------------");
@@ -295,17 +301,19 @@ public class Main {
         }
     }
 
-    private static int daysBetween(String date1, String date2) {
-        int d1 = dateToDay(date1);
-        int d2 = dateToDay(date2);
-        return Math.abs(d2 - d1) / 100;
-    }
-
-    private static int dateToDay(String date) {
+    // Convert date string (DD-MM-YYYY) to days since epoch
+    private static long dateToDay(String date) {
         String[] parts = date.split("-");
         int day = Integer.parseInt(parts[0]);
         int month = Integer.parseInt(parts[1]);
         int year = Integer.parseInt(parts[2]);
-        return year * 10000 + month * 100 + day;
+        return (long) year * 365 + month * 30 + day;
+    }
+
+    // Calculate difference between two dates in days
+    private static long dateDifference(String date1, String date2) {
+        long d1 = dateToDay(date1);
+        long d2 = dateToDay(date2);
+        return Math.abs(d2 - d1);
     }
 }
